@@ -186,7 +186,7 @@ class EthTraceMapper(object):
             'gas': trace.gas,
             'gas_used': trace.gas_used,
             'subtraces': trace.subtraces,
-            'trace_address': trace.trace_address,
+            'trace_address': '|'.join(str(x) for x in trace.trace_address),
             'error': trace.error,
             'status': trace.status,
             'trace_id': trace.trace_id,
