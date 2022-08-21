@@ -22,6 +22,8 @@
 
 from blockchainetl.jobs.exporters.console_item_exporter import ConsoleItemExporter
 from blockchainetl.jobs.exporters.multi_item_exporter import MultiItemExporter
+from ethereumetl.jobs.exporters.blocks_and_transactions_item_exporter import BLOCK_FIELDS_TO_EXPORT
+from ethereumetl.jobs.exporters.blocks_and_transactions_item_exporter import TRANSACTION_FIELDS_TO_EXPORT
 
 
 def create_item_exporters(outputs):
@@ -75,6 +77,11 @@ def create_item_exporter(output):
         from blockchainetl.jobs.exporters.gcs_item_exporter import GcsItemExporter
         bucket, path = get_bucket_and_path_from_gcs_output(output)
         item_exporter = GcsItemExporter(bucket=bucket, path=path)
+    elif item_exporter_type == ItemExporterType.STARROCKS:
+        from blockchainetl.jobs.exporters.starrocks_item_exporter import StarRocksItemExporter
+        item_exporter = StarRocksItemExporter(output, table_mapping={"block": "blocks", "transaction": "transactions"},
+                                               field_mapping={"block": BLOCK_FIELDS_TO_EXPORT,
+                                                              "transaction": TRANSACTION_FIELDS_TO_EXPORT})
     elif item_exporter_type == ItemExporterType.CONSOLE:
         item_exporter = ConsoleItemExporter()
     elif item_exporter_type == ItemExporterType.KAFKA:
@@ -117,6 +124,8 @@ def determine_item_exporter_type(output):
         return ItemExporterType.GCS
     elif output is None or output == 'console':
         return ItemExporterType.CONSOLE
+    elif output is None or output.startswith('http://'):
+        return ItemExporterType.STARROCKS
     else:
         return ItemExporterType.UNKNOWN
 
@@ -127,4 +136,5 @@ class ItemExporterType:
     GCS = 'gcs'
     CONSOLE = 'console'
     KAFKA = 'kafka'
+    STARROCKS = 'starrocks'
     UNKNOWN = 'unknown'
