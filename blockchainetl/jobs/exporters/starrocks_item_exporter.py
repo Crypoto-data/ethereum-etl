@@ -91,7 +91,10 @@ class StarRocksItemExporter:
         stream_load_sql = " ".join(param for param in params)
         cmdRes = subprocess.run(params, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8", timeout=1800)
         res = json.loads(cmdRes.stdout)
-        logging.info(str(res))
+        if (res["Status"] != "Success" and res["Status"] != "Publish Timeout"
+            and res["Message"] != "all partitions have no load data"):
+            logging.info(str(res))
+            exit(0)
 
     def open(self):
         for item_type, table in self.table_mapping.items():
@@ -109,7 +112,7 @@ class StarRocksItemExporter:
                 self.block_counter += 1
             exporter = self.exporter_mapping.get(item_type)
             exporter.export_item(item)
-        if self.block_counter >= 1000:
+        if self.block_counter >= 1:
             for item_type, table in self.table_mapping.items():
                 file = self.file_mapping[item_type]
                 close_silently(file)
